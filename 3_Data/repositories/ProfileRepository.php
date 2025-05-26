@@ -15,10 +15,9 @@ class ProfileRepository {
                         FirstName,
                         LastName,
                         Email,
-                        DateOfBirth,
-                        Username,
+                        DOB,
                         ProfilePicture
-                    FROM User 
+                    FROM User
                     WHERE UserID = ? AND IsDeleted = FALSE";
             
             $stmt = $this->db->prepare($sql);
@@ -31,7 +30,7 @@ class ProfileRepository {
                     'firstName' => $result['FirstName'],
                     'lastName' => $result['LastName'],
                     'email' => $result['Email'],
-                    'dateOfBirth' => $result['DateOfBirth'],
+                    'dateOfBirth' => $result['DOB'],
                     'username' => $result['Username'],
                     'profilePicture' => $result['ProfilePicture']
                 ];
