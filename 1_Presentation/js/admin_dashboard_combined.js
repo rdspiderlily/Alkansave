@@ -125,7 +125,7 @@ function loadAdminDashboardData() {
                 activeUsersElements[1].textContent = data.activeUsersThisMonth.toString();
             }
 
-            // Update Most Used Categories (show only top category)
+            // Update Most Used Categories (FIXED: show up to 5 categories)
             updateTopCategories(data.topCategories || []);
 
             console.log('ADMIN DASHBOARD: All updates completed successfully!');
@@ -168,12 +168,15 @@ function updateTopCategories(categories) {
         noCategoriesEntry.innerHTML = '<span>No categories found</span>';
         categoriesContainer.appendChild(noCategoriesEntry);
     } else {
-        // Show only the top category
-        const topCategory = categories[0];
-        const categoryEntry = document.createElement('div');
-        categoryEntry.className = 'goal-entry';
-        categoryEntry.innerHTML = `<span>${topCategory.name} (${topCategory.count} goals)</span>`;
-        categoriesContainer.appendChild(categoryEntry);
+        // FIXED: Show up to 5 most used categories instead of just 1
+        const maxCategories = Math.min(5, categories.length);
+        for (let i = 0; i < maxCategories; i++) {
+            const category = categories[i];
+            const categoryEntry = document.createElement('div');
+            categoryEntry.className = 'goal-entry';
+            categoryEntry.innerHTML = `<span>${category.name} (${category.count} goals)</span>`;
+            categoriesContainer.appendChild(categoryEntry);
+        }
     }
 }
 

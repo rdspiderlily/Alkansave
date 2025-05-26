@@ -14,9 +14,10 @@ class AdminDashboardService {
             $stats = $this->adminDashboardRepository->getUserActivityStats();
             error_log("ADMIN SERVICE: User stats - " . json_encode($stats));
             
-            $totalUsers = $stats['activeUsers'] + $stats['inactiveUsers'];
+            $totalUsers = $stats['totalUsers'];
             
             if ($totalUsers > 0) {
+                // Use weekly active users for percentage calculation
                 $activePercentage = round(($stats['activeUsers'] / $totalUsers) * 100, 1);
                 $inactivePercentage = round(($stats['inactiveUsers'] / $totalUsers) * 100, 1);
             } else {
@@ -25,11 +26,12 @@ class AdminDashboardService {
             }
             
             return [
-                'activeUsers' => $stats['activeUsers'],
+                'activeUsers' => $stats['activeUsers'], // Active this week
                 'inactiveUsers' => $stats['inactiveUsers'],
                 'activePercentage' => $activePercentage,
                 'inactivePercentage' => $inactivePercentage,
-                'totalUsers' => $totalUsers
+                'totalUsers' => $totalUsers,
+                'activeUsersMonth' => $stats['activeUsersMonth'] // For separate month display
             ];
         } catch (Exception $e) {
             error_log("AdminDashboardService::getUserActivityStats Error: " . $e->getMessage());
@@ -38,7 +40,8 @@ class AdminDashboardService {
                 'inactiveUsers' => 0,
                 'activePercentage' => 0,
                 'inactivePercentage' => 0,
-                'totalUsers' => 0
+                'totalUsers' => 0,
+                'activeUsersMonth' => 0
             ];
         }
     }

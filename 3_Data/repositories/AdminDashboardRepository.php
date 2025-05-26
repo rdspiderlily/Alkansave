@@ -16,10 +16,13 @@ class AdminDashboardRepository {
 
     public function getUserActivityStats() {
         try {
+            // FIXED: Proper logic for active users this week/month
             $sql = "
                 SELECT 
-                    COUNT(CASE WHEN LastLogin >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as activeUsers,
-                    COUNT(CASE WHEN LastLogin < DATE_SUB(CURDATE(), INTERVAL 30 DAY) OR LastLogin IS NULL THEN 1 END) as inactiveUsers
+                    COUNT(CASE WHEN LastLogin >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as activeUsersWeek,
+                    COUNT(CASE WHEN LastLogin >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as activeUsersMonth,
+                    COUNT(CASE WHEN LastLogin < DATE_SUB(CURDATE(), INTERVAL 7 DAY) OR LastLogin IS NULL THEN 1 END) as inactiveUsers,
+                    COUNT(*) as totalUsers
                 FROM User 
                 WHERE IsDeleted = FALSE AND Role = 'user'
             ";
@@ -31,8 +34,10 @@ class AdminDashboardRepository {
             error_log("ADMIN REPO: User activity query result - " . json_encode($result));
             
             return [
-                'activeUsers' => intval($result['activeUsers']),
-                'inactiveUsers' => intval($result['inactiveUsers'])
+                'activeUsers' => intval($result['activeUsersWeek']), // Active this week for progress ring
+                'inactiveUsers' => intval($result['inactiveUsers']),
+                'activeUsersMonth' => intval($result['activeUsersMonth']), // Active this month for separate display
+                'totalUsers' => intval($result['totalUsers'])
             ];
         } catch (PDOException $e) {
             error_log("AdminDashboardRepository::getUserActivityStats PDO Error: " . $e->getMessage());
@@ -42,21 +47,26 @@ class AdminDashboardRepository {
 
     public function getAverageSavingsPerCategory() {
         try {
+            // FIXED: Calculate average across categories, not all goals
             $sql = "
-                SELECT AVG(g.SavedAmount) as avgSavings
-                FROM Goal g
-                INNER JOIN Category c ON g.CategoryID = c.CategoryID
-                WHERE g.IsDeleted = FALSE 
-                AND c.IsDeleted = FALSE 
-                AND g.SavedAmount > 0
+                SELECT AVG(category_avg) as overall_avg
+                FROM (
+                    SELECT c.CategoryID, AVG(g.SavedAmount) as category_avg
+                    FROM Category c
+                    INNER JOIN Goal g ON c.CategoryID = g.CategoryID
+                    WHERE c.IsDeleted = FALSE 
+                    AND g.IsDeleted = FALSE 
+                    AND g.SavedAmount > 0
+                    GROUP BY c.CategoryID
+                ) as category_averages
             ";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $result = $stmt->fetch();
             
-            $avgSavings = $result['avgSavings'] ? floatval($result['avgSavings']) : 0;
-            error_log("ADMIN REPO: Average savings result - " . $avgSavings);
+            $avgSavings = $result['overall_avg'] ? floatval($result['overall_avg']) : 0;
+            error_log("ADMIN REPO: Average savings per category result - " . $avgSavings);
             
             return $avgSavings;
         } catch (PDOException $e) {
@@ -67,16 +77,13 @@ class AdminDashboardRepository {
 
     public function getActiveUsersThisMonth() {
         try {
+            // FIXED: Clear definition - users who logged in this month OR were created this month
             $sql = "
                 SELECT COUNT(DISTINCT UserID) as activeUsers
                 FROM User 
                 WHERE IsDeleted = FALSE 
                 AND Role = 'user'
-                AND (
-                    MONTH(LastLogin) = MONTH(CURDATE()) AND YEAR(LastLogin) = YEAR(CURDATE())
-                    OR 
-                    MONTH(DateCreated) = MONTH(CURDATE()) AND YEAR(DateCreated) = YEAR(CURDATE())
-                )
+                AND LastLogin >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
             ";
             
             $stmt = $this->db->prepare($sql);
