@@ -83,7 +83,7 @@ class AdminDashboardRepository {
                 FROM User 
                 WHERE IsDeleted = FALSE 
                 AND Role = 'user'
-                AND LastLogin >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                AND AccountStatus = 'Active'
             ";
             
             $stmt = $this->db->prepare($sql);

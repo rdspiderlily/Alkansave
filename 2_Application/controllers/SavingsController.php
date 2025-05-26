@@ -101,7 +101,7 @@ class SavingsController {
         // FOR DEBUGGING, DELETE THIS LATER..... END DELETING HERE
         
         $goals = $this->goalRepository->getGoalsByUser($userId);
-        $categories = $this->categoryRepository->getCategories($userId);
+        $categories = $this->categoryRepository->getAllSystemCategories($userId);
         
         // FOR DEBUGGING, DELETE THIS LATER..... START DELETING HERE
         error_log("Found " . count($goals) . " goals and " . count($categories) . " categories");

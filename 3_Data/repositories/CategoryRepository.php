@@ -1,143 +1,140 @@
 <?php
-// FOR DEBUGGING, DELETE THIS LATER..... START DELETING HERE
-// Show errors during development
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-// FOR DEBUGGING, DELETE THIS LATER..... END DELETING HERE
 
 require_once __DIR__ . '/../Database.php';
 
 class CategoryRepository {
     private $db;
-    // Default categories available to all users
-    private $systemCategories = ['Emergency', 'Travel', 'Bills'];
 
-    // Set up database connection and ensure default categories exist
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
-        $this->ensureSystemCategoriesExist();
-    }
-
-    // Creates default system categories if they don't exist in database
-    private function ensureSystemCategoriesExist() {
         try {
-            foreach ($this->systemCategories as $categoryName) {
-                // Check if category already exists in system
-                $stmt = $this->db->prepare("
-                    SELECT COUNT(*) FROM Category 
-                    WHERE CategoryName = ? AND UserID IS NULL
-                ");
-                $stmt->execute([$categoryName]);
-                
-                // Add category if not found
-                if ($stmt->fetchColumn() == 0) {
-                    $stmt = $this->db->prepare("
-                        INSERT INTO Category 
-                        (CategoryName, DateCreated, IsDeleted, UpdatedAt, UserID) 
-                        VALUES (?, NOW(), 0, NOW(), NULL)
-                    ");
-                    $stmt->execute([$categoryName]);
-                }
-            }
-        } catch (PDOException $e) {
-            error_log("Error ensuring system categories: " . $e->getMessage());
+            $this->db = Database::getInstance()->getConnection();
+        } catch (Exception $e) {
+            error_log("CategoryRepository: Database connection failed: " . $e->getMessage());
+            throw new Exception("Database connection failed");
         }
     }
 
-    // Get all categories available to a user (both system and personal)
-    public function getCategories($userId) {
+    public function getMostUsedCategory() {
         try {
-            $stmt = $this->db->prepare("
-                SELECT * FROM Category 
-                WHERE (UserID IS NULL OR UserID = ?) AND IsDeleted = FALSE
-                ORDER BY UserID IS NULL DESC, CategoryName ASC
-            ");
-            $stmt->execute([$userId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sql = "
+                SELECT c.CategoryName, COUNT(g.GoalID) as usageCount
+                FROM Category c
+                INNER JOIN Goal g ON c.CategoryID = g.CategoryID
+                WHERE c.IsDeleted = FALSE AND g.IsDeleted = FALSE
+                AND c.UserID IS NULL
+                GROUP BY c.CategoryID, c.CategoryName
+                HAVING usageCount > 0
+                ORDER BY usageCount DESC
+                LIMIT 1
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            
+            return $result ? $result['CategoryName'] : 'No categories used';
         } catch (PDOException $e) {
-            error_log("Error getting categories: " . $e->getMessage());
-            return [];
+            error_log("CategoryRepository::getMostUsedCategory PDO Error: " . $e->getMessage());
+            throw new Exception("Failed to get most used category: " . $e->getMessage());
         }
     }
 
-    // Add a new user-specific category
-    public function createCategory($userId, $categoryName) {
+    public function getLeastUsedCategory() {
         try {
-            $stmt = $this->db->prepare("
-                INSERT INTO Category (CategoryName, UserID, DateCreated, IsDeleted, UpdatedAt)
-                VALUES (?, ?, NOW(), FALSE, NOW())
-            ");
-            return $stmt->execute([$categoryName, $userId]);
+            // FIXED: Get categories with the LOWEST usage count (but still used)
+            $sql = "
+                SELECT c.CategoryName, COUNT(g.GoalID) as usageCount
+                FROM Category c
+                LEFT JOIN Goal g ON c.CategoryID = g.CategoryID AND g.IsDeleted = FALSE
+                WHERE c.IsDeleted = FALSE AND c.UserID IS NULL
+                GROUP BY c.CategoryID, c.CategoryName
+                ORDER BY usageCount ASC, c.CategoryName ASC
+                LIMIT 1
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            
+            return $result ? $result['CategoryName'] : 'No categories found';
         } catch (PDOException $e) {
-            error_log("Error creating category: " . $e->getMessage());
-            return false;
+            error_log("CategoryRepository::getLeastUsedCategory PDO Error: " . $e->getMessage());
+            throw new Exception("Failed to get least used category: " . $e->getMessage());
         }
     }
 
-    // Check if a category name already exists for a user
-    public function categoryExists($userId, $categoryName) {
+    public function getAllSystemCategories() {
         try {
-            $stmt = $this->db->prepare("
-                SELECT COUNT(*) FROM Category 
-                WHERE CategoryName = ? AND (UserID IS NULL OR UserID = ?) AND IsDeleted = FALSE
-            ");
-            $stmt->execute([$categoryName, $userId]);
-            return $stmt->fetchColumn() > 0;
+            // FIXED: Use DISTINCT to avoid duplicates
+            $sql = "
+                SELECT DISTINCT CategoryID, CategoryName, DateCreated
+                FROM Category
+                WHERE IsDeleted = FALSE AND UserID IS NULL
+                ORDER BY CategoryName ASC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $results = $stmt->fetchAll();
+            
+            return $results;
         } catch (PDOException $e) {
-            error_log("Error checking if category exists: " . $e->getMessage());
-            return false;
+            error_log("CategoryRepository::getAllSystemCategories PDO Error: " . $e->getMessage());
+            throw new Exception("Failed to get all system categories: " . $e->getMessage());
         }
     }
-    
-    // Get category details by its ID
-    public function getCategoryById($categoryId) {
+
+    public function addSystemCategory($categoryName) {
         try {
-            $stmt = $this->db->prepare("
-                SELECT * FROM Category 
-                WHERE CategoryID = ? AND IsDeleted = FALSE
-            ");
-            $stmt->execute([$categoryId]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            // Check if category already exists
+            $checkSql = "SELECT CategoryID FROM Category WHERE CategoryName = ? AND UserID IS NULL AND IsDeleted = FALSE";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$categoryName]);
+            
+            if ($checkStmt->fetch()) {
+                throw new Exception("Category already exists");
+            }
+
+            $sql = "
+                INSERT INTO Category (CategoryName, UserID, DateCreated, IsDeleted)
+                VALUES (?, NULL, NOW(), FALSE)
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([$categoryName]);
+            
+            if ($result) {
+                return $this->db->lastInsertId();
+            } else {
+                throw new Exception("Failed to insert category");
+            }
         } catch (PDOException $e) {
-            error_log("Error getting category by ID: " . $e->getMessage());
-            return null;
+            error_log("CategoryRepository::addSystemCategory PDO Error: " . $e->getMessage());
+            throw new Exception("Failed to add new category: " . $e->getMessage());
         }
     }
-    
-    // Mark a user's category as deleted if not in use
-    public function deleteCategory($categoryId, $userId) {
+
+    public function getCategoryUsageStats() {
         try {
-            // Verify category exists and belongs to user
-            $category = $this->getCategoryById($categoryId);
-            if (!$category || $category['UserID'] === null) {
-                return false; // Can't delete system categories
-            }
+            $sql = "
+                SELECT c.CategoryName, COUNT(g.GoalID) as usageCount,
+                       ROUND((COUNT(g.GoalID) * 100.0 / (SELECT COUNT(*) FROM Goal WHERE IsDeleted = FALSE)), 1) as percentage
+                FROM Category c
+                LEFT JOIN Goal g ON c.CategoryID = g.CategoryID AND g.IsDeleted = FALSE
+                WHERE c.IsDeleted = FALSE AND c.UserID IS NULL
+                GROUP BY c.CategoryID, c.CategoryName
+                ORDER BY usageCount DESC
+            ";
             
-            if ($category['UserID'] != $userId) {
-                return false; // Can't delete another user's categories
-            }
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $results = $stmt->fetchAll();
             
-            // Check if category is being used by any active goals
-            $stmt = $this->db->prepare("
-                SELECT COUNT(*) FROM Goal 
-                WHERE CategoryID = ? AND IsDeleted = FALSE
-            ");
-            $stmt->execute([$categoryId]);
-            
-            if ($stmt->fetchColumn() > 0) {
-                return false; // Category in use, can't delete
-            }
-            
-            // Mark category as deleted
-            $stmt = $this->db->prepare("
-                UPDATE Category 
-                SET IsDeleted = TRUE, UpdatedAt = NOW() 
-                WHERE CategoryID = ?
-            ");
-            return $stmt->execute([$categoryId]);
+            return $results;
         } catch (PDOException $e) {
-            error_log("Error deleting category: " . $e->getMessage());
-            return false;
+            error_log("CategoryRepository::getCategoryUsageStats PDO Error: " . $e->getMessage());
+            throw new Exception("Failed to get category usage stats: " . $e->getMessage());
         }
     }
 }
+?>

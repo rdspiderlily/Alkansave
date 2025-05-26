@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadCategoryData() {
     console.log('CATEGORY MANAGEMENT: Starting data load...');
     
-    fetch('/2_Application/controllers/ADMINCategoryController.php?action=getCategoryData')
+    fetch('/AlkanSave/2_Application/controllers/CategoryController.php?action=getCategoryData')
         .then(response => response.text())
         .then(text => {
             console.log('CATEGORY MANAGEMENT: Raw response:', text);
@@ -91,10 +91,8 @@ function initAddCategoryModal() {
         addCBtn.addEventListener("click", (e) => {
             e.preventDefault();
             addCModal.style.display = "flex";
-            if (categoryNameInput) {
-                categoryNameInput.value = ''; // Clear input
-                categoryNameInput.focus();
-            }
+            categoryNameInput.value = ''; // Clear input
+            categoryNameInput.focus();
         });
 
         if (confirmaddC) {
@@ -125,7 +123,7 @@ function initAddCategoryModal() {
 
 function addNewCategory() {
     const categoryNameInput = document.getElementById("categoryName");
-    const categoryName = categoryNameInput ? categoryNameInput.value.trim() : '';
+    const categoryName = categoryNameInput.value.trim();
 
     if (!categoryName) {
         alert('Please enter a category name');
@@ -145,7 +143,7 @@ function addNewCategory() {
     confirmBtn.textContent = 'Adding...';
     confirmBtn.disabled = true;
 
-    fetch('/2_Application/controllers/ADMINCategoryController.php?action=addCategory', {
+    fetch('/AlkanSave/2_Application/controllers/CategoryController.php?action=addCategory', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/../services/ADMINCategoryService.php';
+require_once __DIR__ . '/../services/CategoryService.php';
 
 class CategoryController {
     private $categoryService;
@@ -27,12 +27,14 @@ class CategoryController {
             $mostUsed = $this->categoryService->getMostUsedCategory();
             $leastUsed = $this->categoryService->getLeastUsedCategory();
             $allCategories = $this->categoryService->getAllSystemCategories();
+            $usageStats = $this->categoryService->getCategoryUsageStats();
 
             $response = [
                 'success' => true,
                 'mostUsedCategory' => $mostUsed,
                 'leastUsedCategory' => $leastUsed,
                 'allCategories' => $allCategories,
+                'usageStats' => $usageStats,
                 'debug' => [
                     'timestamp' => date('Y-m-d H:i:s'),
                     'server' => 'CategoryController'

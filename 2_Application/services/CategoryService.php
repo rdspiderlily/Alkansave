@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../3_Data/repositories/ADMINCategoryRepository.php';
+require_once __DIR__ . '/../../3_Data/repositories/CategoryRepository.php';
 
 class CategoryService {
     private $categoryRepository;
@@ -32,15 +32,32 @@ class CategoryService {
     }
 
     public function getAllSystemCategories() {
-        try {
-            $categories = $this->categoryRepository->getAllSystemCategories();
-            error_log("CATEGORY SERVICE: All categories count - " . count($categories));
-            return $categories;
-        } catch (Exception $e) {
-            error_log("CategoryService::getAllSystemCategories Error: " . $e->getMessage());
-            return [];
-        }
+        $stmt = $this->db->prepare("SELECT * FROM Category WHERE IsDeleted = 0");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getAvailableCategoriesForUser($userId) {
+        $stmt = $this->db->prepare("
+            SELECT * FROM Category 
+            WHERE IsDeleted = 0 AND (CreatedBy = 'admin' OR CreatedBy = :userId)
+        ");
+        $stmt->bindParam(':userId', $userId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    // public function getAllSystemCategories() {
+    //     try {
+    //         $categories = $this->categoryRepository->getAllSystemCategories();
+    //         error_log("CATEGORY SERVICE: All categories count - " . count($categories));
+    //         return $categories;
+    //     } catch (Exception $e) {
+    //         error_log("CategoryService::getAllSystemCategories Error: " . $e->getMessage());
+    //         return [];
+    //     }
+    // }
 
     public function addNewCategory($categoryName) {
         try {
@@ -60,6 +77,17 @@ class CategoryService {
         } catch (Exception $e) {
             error_log("CategoryService::addNewCategory Error: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getCategoryUsageStats() {
+        try {
+            $stats = $this->categoryRepository->getCategoryUsageStats();
+            error_log("CATEGORY SERVICE: Category usage stats - " . json_encode($stats));
+            return $stats;
+        } catch (Exception $e) {
+            error_log("CategoryService::getCategoryUsageStats Error: " . $e->getMessage());
+            return [];
         }
     }
 }
