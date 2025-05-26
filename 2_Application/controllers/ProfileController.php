@@ -16,7 +16,7 @@ class ProfileController {
         header('Access-Control-Allow-Headers: Content-Type');
         
         try {
-            $userID = $_SESSION['user_id'] ?? 6;
+            $userID = $_SESSION['user_id'] ?? 3;
             $action = $_GET['action'] ?? '';
 
             switch ($action) {
