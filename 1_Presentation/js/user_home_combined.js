@@ -58,6 +58,12 @@ function initSidebar() {
     });
 }
 
+let isEditingProfile = false;
+
+function markProfileAsEditing() {
+  isEditingProfile = true;
+}
+
 // === LOGOUT FUNCTIONS ===
 function initLogout() {
     console.log('COMBINED SCRIPT: Initializing logout');
@@ -65,11 +71,22 @@ function initLogout() {
     const logoutModal = document.getElementById("logoutModal");
     const confirmLogout = document.getElementById("confirmLogout");
     const cancelLogout = document.getElementById("cancelLogout");
+    const editBlockModal = document.getElementById("editBlockModal");
+    const confirmEditBlock = document.getElementById("confirmEditBlock");
 
     if (logoutBtn && logoutModal) {
+        
+        
         logoutBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            logoutModal.style.display = "flex";
+            if (isEditingProfile) {
+            // Show "cannot logout" modal
+                editBlockModal.style.display = "flex";
+            } else {
+                e.preventDefault();
+                logoutModal.style.display = "flex";
+            }
+            // e.preventDefault();
+            // logoutModal.style.display = "flex";
         });
 
         if (confirmLogout) {
@@ -81,6 +98,12 @@ function initLogout() {
         if (cancelLogout) {
             cancelLogout.addEventListener("click", () => {
                 logoutModal.style.display = "none";
+            });
+        }
+
+        if (confirmEditBlock) {
+            confirmEditBlock.addEventListener("click", () => {
+                editBlockModal.style.display = "none";
             });
         }
     }

@@ -75,11 +75,35 @@
         <input type="text" id="enterAmount" name="enterAmount" required class="inputC">
         
         <label for="dateToday" class="categoryName">Date Today:</label>
-        <input type="date" id="dateToday" name="dateToday" required class="inputC"/>
+        <input type="date" id="dateToday" name="dateToday" required class="inputC" readonly/>
       </form>
       <div class="addS-buttons">
         <button id="confirmAddS" class="addSconfirm-btn">Add Savings</button>
         <button id="cancelAddS" class="addScancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for use savings to a goal -->
+  <div id="useSmodal" class="addS-modal">
+    <div class="addS-content">
+        <h2 class="addS-title"><span class="add">Use</span> <span class="newGoal">Savings</span></h2>
+      <form>
+        <!-- Hidden field to store which goal we're adding to -->
+        <input type="hidden" id="savingsGoalId" name="goalId">
+
+        <label for="currentSavings" class="categoryName">Current Total Savings:</label>
+        <input type="text" id="enterAmount" name="enterAmount" required class="inputC" readonly>
+        
+        <label for="enterAmount" class="categoryName">Enter Amount:</label>
+        <input type="text" id="enterAmount" name="enterAmount" required class="inputC">
+        
+        <label for="dateToday" class="categoryName">Date Today:</label>
+        <input type="date" id="dateToday" name="dateToday" required class="inputC" readonly/>
+      </form>
+      <div class="addS-buttons">
+        <button id="confirmUseS" class="addSconfirm-btn">Use Savings</button>
+        <button id="cancelUseS" class="addScancel-btn">Cancel</button>
       </div>
     </div>
   </div>
@@ -171,6 +195,6 @@
   <script src="js/messageModal.js"></script>
   <script src="js/user_savings.js"></script>
   <script src="js/fix_savings_modal.js"></script>
-  <script src="js/dateLinksLogout.js"></script>
+  <script src="js/user_home_combined.js"></script>
 </body>
 </html>

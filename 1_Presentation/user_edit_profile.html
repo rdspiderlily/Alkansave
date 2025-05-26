@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/sharedLayout.css" />
   <link rel="stylesheet" href="css/user_edit_profile.css" />
   <link rel="stylesheet" href="css/logout.css" />
+  <link rel="stylesheet" href="css/editProfileNoLogout.css" />
 </head>
 <body>
   <div class="sidebar">
@@ -22,7 +23,7 @@
       <a href="user_reports.html"><img src="images/reports_icon.svg" alt="Reports">Reports</a>
       <a href="user_profile.html"><img src="images/profile_icon.svg" alt="Profile">Profile</a>
     </nav>
-    <a href="landing.html" class="logout" id="logoutButton">
+    <a class="logout" id="logoutButton">
       <img src="images/logout_icon.svg" alt="Logout">Log Out
     </a>
   </div>
@@ -45,24 +46,24 @@
             <img id="profilePreview" src="images/profile.svg" alt="Profile Picture" />
           </div>
           <label for="profilePicture" class="upload-btn">Upload Picture</label>
-          <input type="file" id="profilePicture" name="profilePicture" accept="image/*" />
+          <input type="file" id="profilePicture" name="profilePicture" accept="image/*" oninput="markProfileAsEditing()"/>
         </div>
 
         <div class="profile-info">
           <div class="info-grid">
             <div class="info-item">
               <label>First Name</label>
-              <input type="text" id="firstName" name="firstName" required />
+              <input type="text" id="firstName" name="firstName" oninput="markProfileAsEditing()" required />
             </div>
 
             <div class="info-item">
               <label>Last Name</label>
-              <input type="text" id="lastName" name="lastName" required />
+              <input type="text" id="lastName" name="lastName" oninput="markProfileAsEditing()" required />
             </div>
 
             <div class="info-item">
               <label>Email Address</label>
-              <input type="email" id="email" name="email" required />
+              <input type="email" id="email" name="email" oninput="markProfileAsEditing()" required />
             </div>
 
             <div class="info-item">
@@ -103,6 +104,17 @@
       </div>
     </div>
 
+    <!-- Modal to block logout while editing -->
+  <div id="editBlockModal" class="logout-modal">
+    <div class="modal-content">
+      <h3>You cannot log out while editing your profile.<br>Please save or cancel changes first.</h3>
+      <div class="modal-buttons">
+        <button id="confirmEditBlock" class="confirm-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Confirmation modal for logging out -->
     <div id="logoutModal" class="logout-modal">
       <div class="modal-content">
         <h3>Are you sure you want to log out?</h3>
@@ -113,7 +125,17 @@
       </div>
     </div>
 
-    <script src="js/dateLinksLogout.js"></script>
+    <!-- General purpose modal for showing messages/alerts -->
+    <div id="messageModal" class="logout-modal">
+      <div class="modal-content">
+          <h3 id="messageModalText"></h3>
+          <div class="modal-buttons">
+              <button id="confirmMessage" class="confirm-btn">OK</button>
+          </div>
+      </div>
+    </div>
+
+    <script src="js/user_home_combined.js"></script>
     <script src="js/user_edit_profile.js"></script>
   </body>
 </html>

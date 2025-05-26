@@ -80,6 +80,7 @@
       </section>
     </div>
 
+    <!-- Confirmation modal for logging out -->
     <div id="logoutModal" class="logout-modal">
       <div class="modal-content">
         <h3>Are you sure you want to log out?</h3>
@@ -89,8 +90,18 @@
         </div>
       </div>
     </div>
-  
-    <script src="js/dateLinksLogout.js"></script>
+
+    <!-- General purpose modal for showing messages/alerts -->
+    <div id="messageModal" class="logout-modal">
+      <div class="modal-content">
+          <h3 id="messageModalText"></h3>
+          <div class="modal-buttons">
+              <button id="confirmMessage" class="confirm-btn">OK</button>
+          </div>
+      </div>
+    </div>
+
     <script src="js/user_profile.js"></script>
+    <script src="js/user_home_combined.js"></script>
   </body>
 </html>

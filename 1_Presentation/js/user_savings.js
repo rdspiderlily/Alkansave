@@ -108,6 +108,9 @@ function renderGoals(goals) {
                 <button class="edit-goal-btn" title="Add Savings" onclick="openAddSavingsModal(${goal.GoalID})">
                     <img src="images/addIcon.png"/>Add Savings
                 </button>
+                <button class="edit-goal-btn" title="Add Savings" onclick="openUseSavingsModal(${goal.GoalID})">
+                    <img src="images/addIcon.png"/>Use Savings
+                </button>
             </div>
         `;
        
@@ -423,4 +426,45 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+// Open modal to add savings to a goal
+function openUseSavingsModal(goalId) {
+    const modal = document.getElementById('useSmodal');
+    
+    // Store which goal we're adding to
+    const hiddenField = document.getElementById('savingsGoalId');
+    if (hiddenField) {
+        hiddenField.value = goalId;
+    }
+    
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateToday').value = today;
+    
+    // Clear previous amount
+    const amountInput = document.getElementById('enterAmount');
+    if (amountInput) {
+        amountInput.value = '';
+    }
+    
+    // Show modal
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+    
+    // Set up button handlers
+    document.getElementById('confirmUseS').onclick = function() {
+        addSavings(goalId);
+    };
+    
+    document.getElementById('cancelUseS').onclick = function() {
+        closeUseSavingsModal();
+    };
+}
+
+// Hide add savings modal
+function closeUseSavingsModal() {
+    const modal = document.getElementById('useSmodal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
 }
