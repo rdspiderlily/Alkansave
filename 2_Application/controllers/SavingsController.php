@@ -230,7 +230,7 @@ class SavingsController {
             return;
         }
        
-        $success = $this->categoryRepository->createCategory($userId, $categoryName);
+        $success = $this->categoryRepository->addSystemCategory($categoryName);
         header('Content-Type: application/json');
         echo json_encode(['success' => $success]);
     }

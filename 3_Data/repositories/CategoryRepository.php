@@ -114,6 +114,36 @@ class CategoryRepository {
         }
     }
 
+    public function addSystemUserCategory($userId, $categoryName) {
+        try {
+            // Check if category already exists
+            $checkSql = "SELECT CategoryID FROM Category WHERE CategoryName = ? AND UserID = ? AND IsDeleted = FALSE";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$categoryName]);
+            
+            if ($checkStmt->fetch()) {
+                throw new Exception("Category already exists");
+            }
+
+            $sql = "
+                INSERT INTO Category (CategoryName, UserID, DateCreated, IsDeleted)
+                VALUES (?, ?, NOW(), FALSE)
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([$categoryName, $userId]);
+            
+            if ($result) {
+                return $this->db->lastInsertId();
+            } else {
+                throw new Exception("Failed to insert category");
+            }
+        } catch (PDOException $e) {
+            error_log("CategoryRepository::addSystemCategory PDO Error: " . $e->getMessage());
+            throw new Exception("Failed to add new category: " . $e->getMessage());
+        }
+    }
+
     public function getCategoryUsageStats() {
         try {
             $sql = "

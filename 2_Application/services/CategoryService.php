@@ -32,32 +32,15 @@ class CategoryService {
     }
 
     public function getAllSystemCategories() {
-        $stmt = $this->db->prepare("SELECT * FROM Category WHERE IsDeleted = 0");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $categories = $this->categoryRepository->getAllSystemCategories();
+            error_log("CATEGORY SERVICE: All categories count - " . count($categories));
+            return $categories;
+        } catch (Exception $e) {
+            error_log("CategoryService::getAllSystemCategories Error: " . $e->getMessage());
+            return [];
+        }
     }
-
-    public function getAvailableCategoriesForUser($userId) {
-        $stmt = $this->db->prepare("
-            SELECT * FROM Category 
-            WHERE IsDeleted = 0 AND (CreatedBy = 'admin' OR CreatedBy = :userId)
-        ");
-        $stmt->bindParam(':userId', $userId);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-
-    // public function getAllSystemCategories() {
-    //     try {
-    //         $categories = $this->categoryRepository->getAllSystemCategories();
-    //         error_log("CATEGORY SERVICE: All categories count - " . count($categories));
-    //         return $categories;
-    //     } catch (Exception $e) {
-    //         error_log("CategoryService::getAllSystemCategories Error: " . $e->getMessage());
-    //         return [];
-    //     }
-    // }
 
     public function addNewCategory($categoryName) {
         try {
@@ -72,6 +55,27 @@ class CategoryService {
             }
 
             $categoryId = $this->categoryRepository->addSystemCategory($categoryName);
+            error_log("CATEGORY SERVICE: New category added with ID - " . $categoryId);
+            return $categoryId;
+        } catch (Exception $e) {
+            error_log("CategoryService::addNewCategory Error: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function addNewUserCategory($categoryName) {
+        try {
+            // Validate input
+            $categoryName = trim($categoryName);
+            if (empty($categoryName)) {
+                throw new Exception("Category name cannot be empty");
+            }
+
+            if (strlen($categoryName) > 100) {
+                throw new Exception("Category name too long (max 100 characters)");
+            }
+
+            $categoryId = $this->categoryRepository->addSystemUserCategory($categoryName);
             error_log("CATEGORY SERVICE: New category added with ID - " . $categoryId);
             return $categoryId;
         } catch (Exception $e) {
